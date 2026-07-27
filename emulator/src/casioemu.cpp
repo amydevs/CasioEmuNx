@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 {
 #ifdef __SWITCH__
 	freopen("casioemu.log", "w", stdout);
+	setvbuf(stdout, NULL, _IOLBF, 1024);
 #endif
 	std::map<std::string, std::string> argv_map;
 	for (int ix = 1; ix != argc; ++ix)
@@ -196,6 +197,8 @@ int main(int argc, char *argv[])
 
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
+			case SDL_FINGERDOWN:
+			case SDL_FINGERUP:
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
 				emulator.UIEvent(event);
