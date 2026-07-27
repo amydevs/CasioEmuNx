@@ -27,16 +27,8 @@
           name = "casio-emu-nx";
           src = ./emulator;
 
-          nativeBuildInputs = [
-            pkgs.cmake
-            pkgs.ninja # Optional, but recommended for speed
-          ];
-
-          cmakeFlags = [ "-DCMAKE_BUILD_TYPE=Release" ];
-
           installPhase = ''
             mkdir $out
-            cp example.nro $out
           '';
         };
       }
