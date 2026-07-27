@@ -24,10 +24,16 @@
       {
         devShells.default = pkgs.mkShell.override { stdenv = pkgs.devkitNix.stdenvA64; } {};
         packages.default = pkgs.devkitNix.stdenvA64.mkDerivation {
-          name = "devkitA64-example";
-          src = ./.;
+          name = "casio-emu-nx";
+          src = ./emulator;
 
-          makeFlags = [ "TARGET=example" ];
+          nativeBuildInputs = [
+            pkgs.cmake
+            pkgs.ninja # Optional, but recommended for speed
+          ];
+
+          cmakeFlags = [ "-DCMAKE_BUILD_TYPE=Release" ];
+
           installPhase = ''
             mkdir $out
             cp example.nro $out
