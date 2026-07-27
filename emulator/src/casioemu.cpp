@@ -27,6 +27,9 @@ using namespace casioemu;
 
 int main(int argc, char *argv[])
 {
+#ifdef __SWITCH__
+	freopen("casioemu.log", "w", stdout);
+#endif
 	std::map<std::string, std::string> argv_map;
 	for (int ix = 1; ix != argc; ++ix)
 	{
@@ -222,6 +225,8 @@ int main(int argc, char *argv[])
 			PANIC("error while writing history file: %s\n", std::strerror(err));
 	}
 #endif
-
+#ifdef __SWITCH__
+	fclose(stdout);
+#endif
 	return 0;
 }
