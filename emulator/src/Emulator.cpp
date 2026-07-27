@@ -170,6 +170,12 @@ namespace casioemu
 			event.motion.xrel *= (float) interface_background.dest.w / width;
 			event.motion.yrel *= (float) interface_background.dest.h / height;
 			break;
+		case SDL_FINGERDOWN:
+		case SDL_FINGERUP:
+		case SDL_FINGERMOTION:
+			event.tfinger.x *= (float) interface_background.dest.w / width;
+			event.tfinger.y *= (float) interface_background.dest.h / height;
+			break;
 		case SDL_MOUSEWHEEL:
 			event.wheel.x *= (float) interface_background.dest.w / width;
 			event.wheel.y *= (float) interface_background.dest.h / height;

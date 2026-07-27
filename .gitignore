@@ -7,5 +7,6 @@ models/*/*.asm
 models/*/*.names
 ignore/
 build/
+cmake-build*/
 test/
 .cache/

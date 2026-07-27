@@ -18,8 +18,10 @@
 #include <cstdlib>
 #include <cstring>
 
+#ifndef __SWITCH__
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
 
 using namespace casioemu;
 
@@ -61,6 +63,7 @@ int main(int argc, char *argv[])
 	if (IMG_Init(imgFlags) != imgFlags)
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
+#ifndef __SWITCH__
 	std::string history_filename;
 	auto history_filename_iter = argv_map.find("history");
 	if (history_filename_iter != argv_map.end())
@@ -72,6 +75,7 @@ int main(int argc, char *argv[])
 		if (err && err != ENOENT)
 			PANIC("error while reading history file: %s\n", std::strerror(err));
 	}
+#endif
 
 	{
 		Emulator emulator(argv_map);
@@ -80,6 +84,7 @@ int main(int argc, char *argv[])
 		// Used to signal to the console input thread when to stop.
 		static std::atomic<bool> running(true);
 
+#ifndef __SWITCH__
 		std::thread console_input_thread([&] {
 			struct terminate_thread {};
 			rl_event_hook = [](){
@@ -142,6 +147,7 @@ int main(int argc, char *argv[])
 				}
 			}
 		});
+#endif
 
 		while (emulator.Running())
 		{
@@ -195,21 +201,27 @@ int main(int argc, char *argv[])
 		}
 
 		running = false;
+#ifndef __SWITCH__
 		console_input_thread.join();
+#endif
 	}
 
 	std::cout << '\n';
+#ifndef __SWITCH__
 	rl_deprep_terminal();
+#endif
 
 	IMG_Quit();
 	SDL_Quit();
 
+#ifndef __SWITCH__
 	if (!history_filename.empty())
 	{
 		int err = write_history(history_filename.c_str());
 		if (err)
 			PANIC("error while writing history file: %s\n", std::strerror(err));
 	}
+#endif
 
 	return 0;
 }

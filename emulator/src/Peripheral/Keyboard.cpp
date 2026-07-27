@@ -214,6 +214,11 @@ namespace casioemu
 				break;
 			}
 			break;
+		
+		case SDL_FINGERDOWN:
+		case SDL_FINGERUP:
+			PressAt(event.tfinger.x, event.tfinger.y, false);
+			break;
 
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
