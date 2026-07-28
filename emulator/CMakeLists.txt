@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(emulator VERSION 1.0.0 LANGUAGES CXX)
+project(casioemu VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,7 +17,7 @@ if(!NINTENDO_SWITCH)
 endif()
 
 # Define the executable
-add_executable(emulator
+add_executable(casioemu
     src/Logger.cpp
     src/Peripheral/ROMWindow.cpp
     src/Peripheral/Timer.cpp
@@ -42,7 +42,7 @@ add_executable(emulator
 )
 
 # Link libraries
-target_link_libraries(emulator
+target_link_libraries(casioemu
     Threads::Threads
     lua_static
     ${SDL2_LIBRARIES}
@@ -51,7 +51,7 @@ target_link_libraries(emulator
 )
 
 # Include directories
-target_include_directories(emulator PRIVATE
+target_include_directories(casioemu PRIVATE
     ${SDL2_INCLUDE_DIRS}
     ${SDL2_image_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIRS}
@@ -59,11 +59,11 @@ target_include_directories(emulator PRIVATE
 )
 
 # Add compile flags if needed
-target_compile_options(emulator PRIVATE
+target_compile_options(casioemu PRIVATE
     ${SDL2_CFLAGS_OTHER}
     ${SDL2_image_CFLAGS_OTHER}
     ${LUA_CFLAGS_OTHER}
     ${READLINE_CFLAGS_OTHER}
 )
 
-include(emulator_switch)
+include(casioemu_switch)

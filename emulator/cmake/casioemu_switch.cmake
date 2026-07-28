@@ -13,33 +13,33 @@ foreach(tool NACPTOOL_BIN ELF2NRO_BIN)
     endif()
 endforeach()
 
-set(EMULATOR_SWITCH_INTERMEDIATES_DIR "${CMAKE_BINARY_DIR}/intermediates")
-set(EMULATOR_SWITCH_NACP
-    "${EMULATOR_SWITCH_INTERMEDIATES_DIR}/emulator.nacp")
+set(CASIOEMU_SWITCH_INTERMEDIATES_DIR "${CMAKE_BINARY_DIR}/intermediates")
+set(CASIOEMU_SWITCH_NACP
+    "${CASIOEMU_SWITCH_INTERMEDIATES_DIR}/casioemu.nacp")
 
 add_custom_command(
-    OUTPUT "${EMULATOR_SWITCH_NACP}"
+    OUTPUT "${CASIOEMU_SWITCH_NACP}"
     COMMAND "${NACPTOOL_BIN}"
     --create
     "Casio Calculator Emulator"
     "amydevs"
     "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.0"
-    "${EMULATOR_SWITCH_NACP}"
+    "${CASIOEMU_SWITCH_NACP}"
     VERBATIM
 )
 
-add_custom_target(emulator-nacp
-    DEPENDS "${EMULATOR_SWITCH_NACP}")
+add_custom_target(casioemu-nacp
+    DEPENDS "${CASIOEMU_SWITCH_NACP}")
 
 add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/emulator.nro"
+    OUTPUT "${CMAKE_BINARY_DIR}/casioemu.nro"
     COMMAND "${ELF2NRO_BIN}"
-    "$<TARGET_FILE:emulator>"
-    "${CMAKE_BINARY_DIR}/emulator.nro"
-    "--nacp=${EMULATOR_SWITCH_NACP}"
-    DEPENDS emulator "${EMULATOR_SWITCH_NACP}"
+    "$<TARGET_FILE:casioemu>"
+    "${CMAKE_BINARY_DIR}/casioemu.nro"
+    "--nacp=${CASIOEMU_SWITCH_NACP}"
+    DEPENDS casioemu "${CASIOEMU_SWITCH_NACP}"
     VERBATIM
 )
 
-add_custom_target(emulator-nro
-    DEPENDS "${CMAKE_BINARY_DIR}/emulator.nro")
+add_custom_target(casioemu-nro
+    DEPENDS "${CMAKE_BINARY_DIR}/casioemu.nro")
