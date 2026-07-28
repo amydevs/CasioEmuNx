@@ -36,4 +36,9 @@ target_compile_options(casiolauncher PRIVATE
     ${SDL2_CFLAGS_OTHER}
 )
 
+include(GNUInstallDirs)
+install(TARGETS casiolauncher
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
 include(casiolauncher_switch)

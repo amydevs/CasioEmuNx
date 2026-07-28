@@ -66,4 +66,9 @@ target_compile_options(casioemu PRIVATE
     ${READLINE_CFLAGS_OTHER}
 )
 
+include(GNUInstallDirs)
+install(TARGETS casioemu
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
 include(casioemu_switch)

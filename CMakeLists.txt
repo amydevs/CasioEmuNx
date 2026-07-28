@@ -4,12 +4,8 @@ project(casiobundle VERSION 1.0.0)
 add_subdirectory(emulator)
 add_subdirectory(launcher)
 
-add_custom_target(casiobundle-models ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/models"
-        "${CMAKE_BINARY_DIR}/models"
-    COMMENT "Copying models folder to binary directory"
-)
+include(GNUInstallDirs)
+install(DIRECTORY models DESTINATION ${CMAKE_INSTALL_DATADIR}/casioemu)
 
 if(NINTENDO_SWITCH)
     add_custom_target(casiobundle-nro
