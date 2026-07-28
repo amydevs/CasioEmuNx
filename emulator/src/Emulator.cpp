@@ -42,8 +42,16 @@ namespace casioemu
 		if (interface_background.dest.x != 0 || interface_background.dest.y != 0)
 			PANIC("rsd_interface must have dest x and y coordinate zero\n");
 
+
+#ifndef __SWITCH__
 		width = interface_background.dest.w;
 		height = interface_background.dest.h;
+#else
+		SDL_DisplayMode display_mode;
+		SDL_GetCurrentDisplayMode(0, &display_mode);
+		width = display_mode.w;
+		height = display_mode.h;
+#endif
 		try
 		{
 			std::size_t pos;
@@ -332,25 +340,22 @@ namespace casioemu
 
 	void Emulator::UpdateViewport()
 	{
-		int window_w, window_h;
-		SDL_GetWindowSize(window, &window_w, &window_h);
-
-		float window_ratio = (float) window_w / window_h;
+		float window_ratio = (float) width / height;
 		float target_ratio = (float) interface_background.dest.w / interface_background.dest.h;
 
 		if (window_ratio > target_ratio)
 		{
-			viewport.h = window_h;
-			viewport.w = (int) (window_h * target_ratio);
-			viewport.x = (window_w - viewport.w) / 2;
+			viewport.h = height;
+			viewport.w = (int) (height * target_ratio);
+			viewport.x = (width - viewport.w) / 2;
 			viewport.y = 0;
 		}
 		else
 		{
-			viewport.w = window_w;
-			viewport.h = (int) (window_w / target_ratio);
+			viewport.w = width;
+			viewport.h = (int) (width / target_ratio);
 			viewport.x = 0;
-			viewport.y = (window_h - viewport.h) / 2;
+			viewport.y = (height - viewport.h) / 2;
 		}
 	}
 
