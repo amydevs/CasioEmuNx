@@ -13,7 +13,7 @@ foreach(tool NACPTOOL_BIN ELF2NRO_BIN)
     endif()
 endforeach()
 
-set(CASIOEMU_SWITCH_INTERMEDIATES_DIR "${CMAKE_BINARY_DIR}/intermediates")
+set(CASIOEMU_SWITCH_INTERMEDIATES_DIR "${CMAKE_CURRENT_BINARY_DIR}/intermediates")
 set(CASIOEMU_SWITCH_NACP
     "${CASIOEMU_SWITCH_INTERMEDIATES_DIR}/casioemu.nacp")
 
@@ -32,14 +32,14 @@ add_custom_target(casioemu-nacp
     DEPENDS "${CASIOEMU_SWITCH_NACP}")
 
 add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/casioemu.nro"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/casioemu.nro"
     COMMAND "${ELF2NRO_BIN}"
     "$<TARGET_FILE:casioemu>"
-    "${CMAKE_BINARY_DIR}/casioemu.nro"
+    "${CMAKE_CURRENT_BINARY_DIR}/casioemu.nro"
     "--nacp=${CASIOEMU_SWITCH_NACP}"
     DEPENDS casioemu "${CASIOEMU_SWITCH_NACP}"
     VERBATIM
 )
 
 add_custom_target(casioemu-nro
-    DEPENDS "${CMAKE_BINARY_DIR}/casioemu.nro")
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/casioemu.nro")
