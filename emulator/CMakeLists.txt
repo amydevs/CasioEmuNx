@@ -12,7 +12,7 @@ find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
 pkg_check_modules(SDL2_image REQUIRED SDL2_image)
-if(!NINTENDO_SWITCH)
+if(NOT NINTENDO_SWITCH)
     pkg_check_modules(READLINE REQUIRED readline)
 endif()
 
