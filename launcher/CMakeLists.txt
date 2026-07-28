@@ -1,0 +1,36 @@
+cmake_minimum_required(VERSION 3.10)
+project(casiolauncher VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+include(imgui)
+find_package(Threads REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2 REQUIRED sdl2)
+
+# Define the executable
+add_executable(casiolauncher
+    src/casiolauncher.cpp
+)
+
+# Link libraries
+target_link_libraries(casiolauncher
+    Threads::Threads
+    imgui
+    ${SDL2_LIBRARIES}
+)
+
+# Include directories
+target_include_directories(casiolauncher PRIVATE
+    ${SDL2_INCLUDE_DIRS}
+)
+
+# Add compile flags if needed
+target_compile_options(casiolauncher PRIVATE
+    ${SDL2_CFLAGS_OTHER}
+)
+
+include(casiolauncher_switch)
