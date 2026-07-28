@@ -172,7 +172,10 @@ namespace casioemu
 			break;
 		case SDL_FINGERDOWN:
 		case SDL_FINGERUP:
-		case SDL_FINGERMOTION:
+			int window_w, window_h;
+			SDL_GetWindowSize(window, &window_w, &window_h);
+			event.tfinger.x *= window_w;
+			event.tfinger.y *= window_h;
 			event.tfinger.x *= (float) interface_background.dest.w / width;
 			event.tfinger.y *= (float) interface_background.dest.h / height;
 			break;
