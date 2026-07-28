@@ -4,10 +4,6 @@
 #include <SDL.h>
 #include <glad/glad.h>
 
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
-
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
@@ -67,47 +63,6 @@ int main() {
         ImGui::StyleColorsDark();
 
         io.Fonts->AddFontDefault();
-#ifdef __SWITCH__
-        {
-            plInitialize(PlServiceType_System);
-            static PlFontData stdFontData, extFontData;
-        
-            PlFontData fonts_std;
-            PlFontData fonts_ext;
-            
-            plGetSharedFontByType(&fonts_std, PlSharedFontType_Standard);
-            plGetSharedFontByType(&fonts_ext, PlSharedFontType_NintendoExt);
-
-            ImFontConfig config;
-            config.FontDataOwnedByAtlas = false;
-
-            strcpy(config.Name, "Nintendo Standard");
-            io.Fonts->AddFontFromMemoryTTF (fonts_std.address, fonts_std.size, 24.0f, &config, io.Fonts->GetGlyphRangesCyrillic());
-
-            strcpy(config.Name, "Nintendo Ext");
-            static const ImWchar ranges[] =
-                {
-                    0xE000, 0xE06B,
-                    0xE070, 0xE07E,
-                    0xE080, 0xE099,
-                    0xE0A0, 0xE0BA,
-                    0xE0C0, 0xE0D6,
-                    0xE0E0, 0xE0F5,
-                    0xE100, 0xE105,
-                    0xE110, 0xE116,
-                    0xE121, 0xE12C,
-                    0xE130, 0xE13C,
-                    0xE140, 0xE14D,
-                    0xE150, 0xE153,
-                    0,
-                };
-
-            io.Fonts->AddFontFromMemoryTTF (fonts_ext.address, fonts_ext.size, 24.0f, &config, ranges);
-            io.Fonts->Build ();
-
-            plExit();
-        }
-#endif
         ImGui_ImplSDL2_InitForOpenGL(window, context);
         ImGui_ImplOpenGL3_Init("#version 330 core");
 
