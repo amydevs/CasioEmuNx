@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-project(casiolauncher VERSION 1.0.0 LANGUAGES CXX)
+project(casiolauncher VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+include(glad)
 include(imgui)
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -21,6 +23,7 @@ target_link_libraries(casiolauncher
     Threads::Threads
     imgui
     ${SDL2_LIBRARIES}
+    ${GLAD_LIBRARIES}
 )
 
 # Include directories

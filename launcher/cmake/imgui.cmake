@@ -34,8 +34,17 @@ if(NINTENDO_SWITCH)
     )
 endif()
 
-target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS})
-target_link_libraries(imgui PUBLIC ${SDL2_LIBRARIES})
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+
+
+
+target_link_libraries(imgui PUBLIC
+    ${SDL2_LIBRARIES}
+    ${GLAD_LIBRARIES}
+)
+target_include_directories(imgui PUBLIC
+    ${SDL2_INCLUDE_DIRS}
+)
 target_compile_options(imgui PRIVATE
     ${SDL2_CFLAGS_OTHER}
 )

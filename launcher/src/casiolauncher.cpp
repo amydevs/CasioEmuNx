@@ -1,10 +1,12 @@
-#include <switch.h>
-
 #include <stdio.h>
 #include <ctype.h>
 
 #include <SDL.h>
 #include <glad/glad.h>
+
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -15,40 +17,11 @@ const GLuint WIDTH = 1280, HEIGHT = 720;
 SDL_Window *window;
 SDL_GLContext context;
 
-static bool init();
-
-u64 hidKeysAllDown()
-{
-    u8 controller;
-    u64 keysDown = 0;
-
-    for(controller = 0; controller < (u8)CONTROLLER_P1_AUTO; controller++) keysDown |= hidKeysDown((HidControllerID)controller);
-
-    return keysDown;
-}
-
-void consoleErrorScreen(const char *fmt, ...){
-    consoleInit(NULL);
-    va_list va;
-    va_start(va, fmt);
-    vprintf(fmt, va);
-    va_end(va);
-    printf("\nPress any button to exit.\n");
-    while(appletMainLoop()){
-        hidScanInput();
-        u64 keysDown = hidKeysAllDown();
-        if (keysDown && !((keysDown & KEY_TOUCH) || (keysDown & KEY_LSTICK_LEFT) || (keysDown & KEY_LSTICK_RIGHT) || (keysDown & KEY_LSTICK_UP) || (keysDown & KEY_LSTICK_DOWN) || \
-            (keysDown & KEY_RSTICK_LEFT) || (keysDown & KEY_RSTICK_RIGHT) || (keysDown & KEY_RSTICK_UP) || (keysDown & KEY_RSTICK_DOWN))) break;
-        consoleUpdate(NULL);
-    }
-    consoleExit(NULL);
-}
-
 static bool init() {
     bool success = true;
 
     if( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0 ){
-        consoleErrorScreen("%s: SDL could not initialize! SDL Error: %s", __func__, SDL_GetError());
+        printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
         success =  false;
     }
     else {
@@ -65,14 +38,14 @@ static bool init() {
                 SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
         );
         if( window == NULL ){
-            consoleErrorScreen("%s: Window could not be created! SDL Error: %s", __func__, SDL_GetError());
+            printf("%s: Window could not be created! SDL Error: %s", __func__, SDL_GetError());
             success =  false;
         }
         else {
             context = SDL_GL_CreateContext(window);
             if( context == NULL )
             {
-                consoleErrorScreen( "%s: OpenGL context could not be created! SDL Error: %s", __func__, SDL_GetError());
+                printf( "%s: OpenGL context could not be created! SDL Error: %s", __func__, SDL_GetError());
                 success =  false;
             }
             else {
@@ -94,6 +67,7 @@ int main() {
         ImGui::StyleColorsDark();
 
         io.Fonts->AddFontDefault();
+#ifdef __SWITCH__
         {
             plInitialize(PlServiceType_System);
             static PlFontData stdFontData, extFontData;
@@ -133,6 +107,7 @@ int main() {
 
             plExit();
         }
+#endif
         ImGui_ImplSDL2_InitForOpenGL(window, context);
         ImGui_ImplOpenGL3_Init("#version 330 core");
 
