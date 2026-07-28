@@ -53,6 +53,7 @@ namespace casioemu
 
 		SpriteInfo interface_background;
 		int width, height;
+		SDL_Rect viewport;
 
 		/**
 		 * A bunch of internally used methods for encapsulation purposes.
@@ -61,6 +62,7 @@ namespace casioemu
 		void TimerCallback();
 		void SetupLuaAPI();
 		void SetupInternals();
+		void UpdateViewport();
 		void RunStartupScript();
 
 	public:

@@ -10,6 +10,7 @@
 #include <string>
 #include <chrono>
 #include <cassert>
+#include <algorithm>
 
 namespace casioemu
 {
@@ -94,6 +95,7 @@ namespace casioemu
 		SDL_FreeSurface(loaded_surface);
 
 		SetupInternals();
+		UpdateViewport();
 		cycles.Reset();
 
 		tick_thread = new std::thread([this] {
@@ -156,32 +158,78 @@ namespace casioemu
 	{
 		std::lock_guard<decltype(access_mx)> access_lock(access_mx);
 
-		// For mouse events, rescale the coordinates from window size to original size.
+		auto map_window_coords = [&](float x, float y, float &out_x, float &out_y) {
+			x -= viewport.x;
+			y -= viewport.y;
+			if (x < 0.0f || x >= viewport.w || y < 0.0f || y >= viewport.h)
+				return false;
+			out_x = x * (float) interface_background.dest.w / viewport.w;
+			out_y = y * (float) interface_background.dest.h / viewport.h;
+			return true;
+		};
+
 		switch (event.type)
 		{
 		case SDL_MOUSEBUTTONDOWN:
+		{
+			float x, y;
+			if (!map_window_coords((float)event.button.x, (float)event.button.y, x, y))
+				return;
+			event.button.x = (Sint32)x;
+			event.button.y = (Sint32)y;
+		}
+			break;
 		case SDL_MOUSEBUTTONUP:
-			event.button.x *= (float) interface_background.dest.w / width;
-			event.button.y *= (float) interface_background.dest.h / height;
+		{
+			float x, y;
+			if (!map_window_coords((float)event.button.x, (float)event.button.y, x, y))
+			{
+				float clamped_x = std::max(0.0f, std::min((float)viewport.w - 1, (float)event.button.x - viewport.x));
+				float clamped_y = std::max(0.0f, std::min((float)viewport.h - 1, (float)event.button.y - viewport.y));
+				map_window_coords(clamped_x, clamped_y, x, y);
+			}
+			event.button.x = (Sint32)x;
+			event.button.y = (Sint32)y;
+		}
 			break;
 		case SDL_MOUSEMOTION:
-			event.motion.x *= (float) interface_background.dest.w / width;
-			event.motion.y *= (float) interface_background.dest.h / height;
-			event.motion.xrel *= (float) interface_background.dest.w / width;
-			event.motion.yrel *= (float) interface_background.dest.h / height;
+		{
+			float x, y;
+			if (!map_window_coords((float)event.motion.x, (float)event.motion.y, x, y))
+				return;
+			event.motion.x = (Sint32)x;
+			event.motion.y = (Sint32)y;
+			event.motion.xrel = (Sint32)(event.motion.xrel * (float) interface_background.dest.w / viewport.w);
+			event.motion.yrel = (Sint32)(event.motion.yrel * (float) interface_background.dest.h / viewport.h);
+		}
 			break;
 		case SDL_FINGERDOWN:
-		case SDL_FINGERUP:
+		{
 			int window_w, window_h;
 			SDL_GetWindowSize(window, &window_w, &window_h);
-			event.tfinger.x *= window_w;
-			event.tfinger.y *= window_h;
-			event.tfinger.x *= (float) interface_background.dest.w / width;
-			event.tfinger.y *= (float) interface_background.dest.h / height;
+			float x = event.tfinger.x * window_w;
+			float y = event.tfinger.y * window_h;
+			if (!map_window_coords(x, y, x, y))
+				return;
+			event.tfinger.x = x;
+			event.tfinger.y = y;
+		}
 			break;
-		case SDL_MOUSEWHEEL:
-			event.wheel.x *= (float) interface_background.dest.w / width;
-			event.wheel.y *= (float) interface_background.dest.h / height;
+		case SDL_FINGERUP:
+		{
+			int window_w, window_h;
+			SDL_GetWindowSize(window, &window_w, &window_h);
+			float x = event.tfinger.x * window_w;
+			float y = event.tfinger.y * window_h;
+			if (!map_window_coords(x, y, x, y))
+			{
+				float clamped_x = std::max(0.0f, std::min((float)viewport.w - 1, x - viewport.x));
+				float clamped_y = std::max(0.0f, std::min((float)viewport.h - 1, y - viewport.y));
+				map_window_coords(clamped_x, clamped_y, x, y);
+			}
+			event.tfinger.x = x;
+			event.tfinger.y = y;
+		}
 			break;
 		}
 		chipset.UIEvent(event);
@@ -282,6 +330,30 @@ namespace casioemu
 		chipset.SetupInternals();
 	}
 
+	void Emulator::UpdateViewport()
+	{
+		int window_w, window_h;
+		SDL_GetWindowSize(window, &window_w, &window_h);
+
+		float window_ratio = (float) window_w / window_h;
+		float target_ratio = (float) interface_background.dest.w / interface_background.dest.h;
+
+		if (window_ratio > target_ratio)
+		{
+			viewport.h = window_h;
+			viewport.w = (int) (window_h * target_ratio);
+			viewport.x = (window_w - viewport.w) / 2;
+			viewport.y = 0;
+		}
+		else
+		{
+			viewport.w = window_w;
+			viewport.h = (int) (window_w / target_ratio);
+			viewport.x = 0;
+			viewport.y = (window_h - viewport.h) / 2;
+		}
+	}
+
 	void Emulator::LoadModelDefition()
 	{
 		if (luaL_loadfile(lua_state, (model_path + "/model.lua").c_str()) != LUA_OK)
@@ -341,10 +413,11 @@ namespace casioemu
 		SDL_RenderCopy(renderer, interface_texture, &interface_background.src, nullptr);
 		chipset.Frame();
 
-		// resize and copy `tx` to screen
+		// draw letterboxed output to screen
 		SDL_SetRenderTarget(renderer, nullptr);
-		SDL_Rect dest {0, 0, width, height};
-		SDL_RenderCopy(renderer, tx, nullptr, &dest);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderClear(renderer);
+		SDL_RenderCopy(renderer, tx, nullptr, &viewport);
 		SDL_DestroyTexture(tx);
 		Repaint();
 	}
@@ -354,6 +427,7 @@ namespace casioemu
 		std::lock_guard<decltype(access_mx)> access_lock(access_mx);
 		width = _width;
 		height = _height;
+		UpdateViewport();
 		Frame();
 	}
 
