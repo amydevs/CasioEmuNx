@@ -36,8 +36,6 @@ endif()
 
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-
-
 target_link_libraries(imgui PUBLIC
     ${SDL2_LIBRARIES}
     ${GLAD_LIBRARIES}
