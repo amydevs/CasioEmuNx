@@ -179,7 +179,7 @@ int main() {
                     for (const auto& casioemu_subpath : possible_casioemu_paths) {
                         fs::path casioemu_path = executable_dir / casioemu_subpath;
                         if (fs::exists(casioemu_path)) {
-                            std::string cmd = fs::canonical(casioemu_path).string() + " " + model_path.string();
+                            std::string cmd = fs::canonical(casioemu_path).string() + " model=" + model_path.string();
                             SDL_HideWindow(window);
                             system(cmd.c_str());
                             SDL_ShowWindow(window);
@@ -188,7 +188,7 @@ int main() {
                     }
 #else
                     fs::path nro_path = fs::canonical("./casioemu.nro");
-                    std::string args = nro_path.string() + " " + model_path.string();
+                    std::string args = nro_path.string() + " model=" + model_path.string();
                     envSetNextLoad(nro_path.c_str(), args.c_str());
                     exit = 1;
 #endif
