@@ -171,17 +171,11 @@ int main() {
             
             for (size_t i = 0; i < models.size(); ++i) {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset_x);
-                auto model_path = models[i].first.path();
-                auto is_model_executable = models[i].second;
+                fs::path model_path = fs::canonical(models[i].first.path());
+                bool is_model_executable = models[i].second;
                 ImGui::BeginDisabled(!is_model_executable);
-                if (ImGui::Button(models[i].first.path().filename().string().c_str(), ImVec2(button_width, button_height))) {
-#ifdef __SWITCH__
-                    fs::path nro_path = fs::canonical("./casioemu.nro");
-                    fs::path model_path = fs::canonical(model_path);
-                    std::string args = nro_path.string() + " " + model_path.string();
-                    envSetNextLoad(nro_path.c_str(), args.c_str());
-                    exit = 1;
-#else
+                if (ImGui::Button(model_path.filename().string().c_str(), ImVec2(button_width, button_height))) {
+#ifndef __SWITCH__
                     for (const auto& casioemu_subpath : possible_casioemu_paths) {
                         fs::path casioemu_path = executable_dir / casioemu_subpath;
                         if (fs::exists(casioemu_path)) {
@@ -192,6 +186,11 @@ int main() {
                             break;
                         }
                     }
+#else
+                    fs::path nro_path = fs::canonical("./casioemu.nro");
+                    std::string args = nro_path.string() + " " + model_path.string();
+                    envSetNextLoad(nro_path.c_str(), args.c_str());
+                    exit = 1;
 #endif
                 }
                 ImGui::EndDisabled();
