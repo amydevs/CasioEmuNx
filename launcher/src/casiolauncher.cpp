@@ -1,7 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <dirent.h>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -18,40 +15,41 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
+namespace fs = std::filesystem;
+
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
 SDL_Window *window;
 SDL_GLContext context;
 
-std::vector<std::pair<std::string, std::string>> getModels() {
-	std::vector<std::pair<std::string, std::string>> models;
-	
-	// Try different possible paths
-	std::vector<std::string> possible_paths = {
-		"../models",
-		"../../models",
-        "../share/casioemu/models",
-		"models"
-	};
-	
-	for (const auto& models_path : possible_paths) {
-		DIR* dir = opendir(models_path.c_str());
-		if (dir != NULL) {
-			struct dirent* entry;
-			while ((entry = readdir(dir)) != NULL) {
-				if (entry->d_type == DT_DIR && entry->d_name[0] != '.') {
-                    std::filesystem::path absolute_path = std::filesystem::canonical(models_path + "/" + entry->d_name);
-					models.push_back({ absolute_path.string(), entry->d_name });
-				}
-			}
-			closedir(dir);
-			if (!models.empty()) {
-				std::sort(models.begin(), models.end(), 
-					[](const std::pair<std::string, std::string>& a, const std::pair<std::string, std::string>& b) { return a.second < b.second; });
-				break;
-			}
-		}
-	}
+const std::vector<std::string> possible_casioemu_paths = {
+    "./casioemu",
+    "../emulator/casioemu",
+    "../emulator/build/casioemu",
+};
+
+const std::vector<std::string> possible_models_paths = {
+    "../models",
+    "../../models",
+    "../share/casioemu/models",
+    "models",
+    "sdmc:/switch/casiolauncher/models",
+};
+
+std::vector<fs::directory_entry> getModelsDirectoryEntries() {
+	std::vector<fs::directory_entry> models;	
+
+    for (const auto& models_path : possible_models_paths) {
+        if (!fs::exists(models_path) || !fs::is_directory(models_path)) {
+            continue;
+        }
+        for (const auto& entry : fs::directory_iterator(models_path)) {
+            if (!entry.is_directory()) {
+                continue;
+            }
+            models.push_back(entry);
+        }
+    }
 	
 	return models;
 }
@@ -95,7 +93,10 @@ static bool init() {
     return success;
 }
 int main() {
-
+#ifdef __SWITCH__
+    freopen("casiolauncher.log", "w", stdout);
+    setvbuf(stdout, NULL, _IOLBF, 1024);
+#endif
     if ( init() ) {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -109,7 +110,7 @@ int main() {
         ImGui_ImplSDL2_InitForOpenGL(window, context);
         ImGui_ImplOpenGL3_Init("#version 330 core");
 
-        std::vector<std::pair<std::string, std::string>> models = getModels();
+        std::vector<fs::directory_entry> models = getModelsDirectoryEntries();
 
         int exit = 0;
         while (!exit) {
@@ -151,15 +152,21 @@ int main() {
             
             for (size_t i = 0; i < models.size(); ++i) {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset_x);
-                if (ImGui::Button(models[i].second.c_str(), ImVec2(button_width, button_height))) {
+                if (ImGui::Button(models[i].path().filename().string().c_str(), ImVec2(button_width, button_height))) {
 #ifdef __SWITCH__
-                    std::string absolute_nro_path = std::filesystem::canonical("./casioemu.nro").string();
-                    std::string args = absolute_nro_path + " " + models[i].first;
-                    envSetNextLoad(absolute_nro_path.c_str(), args.c_str());
+                    fs::path nro_path = fs::canonical("./casioemu.nro");
+                    fs::path model_path = fs::canonical(models[i].path());
+                    std::string args = nro_path.string() + " " + model_path.string();
+                    envSetNextLoad(nro_path.c_str(), args.c_str());
                     exit = 1;
 #else
-                    std::string cmd = "../emulator/build/emulator model=" + models[i].first;
-                    system(cmd.c_str());
+                    for (const auto& casioemu_path : possible_casioemu_paths) {
+                        if (fs::exists(casioemu_path)) {
+                            std::string cmd = fs::canonical(casioemu_path).string() + " " + models[i].path().string();
+                            system(cmd.c_str());
+                            break;
+                        }
+                    }
 #endif
                 }
             }
@@ -187,6 +194,9 @@ int main() {
     SDL_DestroyWindow(window);
     window = NULL;
     SDL_Quit();
+#ifdef __SWITCH__
+	fclose(stdout);
+#endif
     return 0;
 }
 
