@@ -169,10 +169,13 @@ int main() {
                     envSetNextLoad(nro_path.c_str(), args.c_str());
                     exit = 1;
 #else
-                    for (const auto& casioemu_path : possible_casioemu_paths) {
+                    for (const auto& casioemu_subpath : possible_casioemu_paths) {
+                        fs::path casioemu_path = executable_dir / casioemu_subpath;
                         if (fs::exists(casioemu_path)) {
                             std::string cmd = fs::canonical(casioemu_path).string() + " " + models[i].path().string();
+                            SDL_HideWindow(window);
                             system(cmd.c_str());
+                            SDL_ShowWindow(window);
                             break;
                         }
                     }
