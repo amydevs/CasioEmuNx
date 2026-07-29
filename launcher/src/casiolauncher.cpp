@@ -12,7 +12,7 @@
 #endif
 
 #include "imgui.h"
-#include "imgui_impl_sdl.h"
+#include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #ifndef __SWITCH__
 #include "whereami.h"
@@ -38,8 +38,8 @@ const std::vector<std::string> possible_models_paths = {
     "models",
 };
 
-std::vector<fs::directory_entry> getModelsDirectoryEntries(fs::path root_path) {
-	std::vector<fs::directory_entry> models;
+std::vector<std::pair<fs::directory_entry, bool>> getModelsDirectoryEntries(fs::path root_path) {
+	std::vector<std::pair<fs::directory_entry, bool>> models;
 
     for (const auto& models_subpath : possible_models_paths) {
         fs::path models_path = root_path / models_subpath;
@@ -50,7 +50,7 @@ std::vector<fs::directory_entry> getModelsDirectoryEntries(fs::path root_path) {
             if (!entry.is_directory()) {
                 continue;
             }
-            models.push_back(entry);
+            models.push_back(std::make_pair(entry, fs::exists(entry.path() / "rom.bin")));
         }
     }
 	
@@ -117,14 +117,14 @@ int main() {
 
         ImGui::StyleColorsDark();
 
-        ImFontConfig config;
-        config.SizePixels = 24.0f;
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.FontScaleMain = 2.0f;
 
-        io.Fonts->AddFontDefault(&config);
+        io.Fonts->AddFontDefault();
         ImGui_ImplSDL2_InitForOpenGL(window, context);
         ImGui_ImplOpenGL3_Init("#version 330 core");
 
-        std::vector<fs::directory_entry> models = getModelsDirectoryEntries(fs::path(executable_dir));
+        auto models = getModelsDirectoryEntries(fs::path(executable_dir));
 
         int exit = 0;
         while (!exit) {
@@ -152,7 +152,7 @@ int main() {
             }
 
             ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplSDL2_NewFrame(window);
+            ImGui_ImplSDL2_NewFrame();
 
             ImGui::NewFrame();
 
@@ -171,10 +171,13 @@ int main() {
             
             for (size_t i = 0; i < models.size(); ++i) {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset_x);
-                if (ImGui::Button(models[i].path().filename().string().c_str(), ImVec2(button_width, button_height))) {
+                auto model_path = models[i].first.path();
+                auto is_model_executable = models[i].second;
+                ImGui::BeginDisabled(!is_model_executable);
+                if (ImGui::Button(models[i].first.path().filename().string().c_str(), ImVec2(button_width, button_height))) {
 #ifdef __SWITCH__
                     fs::path nro_path = fs::canonical("./casioemu.nro");
-                    fs::path model_path = fs::canonical(models[i].path());
+                    fs::path model_path = fs::canonical(model_path);
                     std::string args = nro_path.string() + " " + model_path.string();
                     envSetNextLoad(nro_path.c_str(), args.c_str());
                     exit = 1;
@@ -182,7 +185,7 @@ int main() {
                     for (const auto& casioemu_subpath : possible_casioemu_paths) {
                         fs::path casioemu_path = executable_dir / casioemu_subpath;
                         if (fs::exists(casioemu_path)) {
-                            std::string cmd = fs::canonical(casioemu_path).string() + " " + models[i].path().string();
+                            std::string cmd = fs::canonical(casioemu_path).string() + " " + model_path.string();
                             SDL_HideWindow(window);
                             system(cmd.c_str());
                             SDL_ShowWindow(window);
@@ -191,6 +194,7 @@ int main() {
                     }
 #endif
                 }
+                ImGui::EndDisabled();
             }
             
             ImGui::End();
