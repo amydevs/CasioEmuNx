@@ -75,7 +75,9 @@ static bool init() {
                 SDL_WINDOWPOS_CENTERED,
                 SDL_WINDOWPOS_CENTERED,
                 WIDTH, HEIGHT,
-                SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MAXIMIZED
+                SDL_WINDOW_OPENGL |
+                SDL_WINDOW_SHOWN |
+                SDL_WINDOW_RESIZABLE
         );
         if( window == NULL ){
             printf("%s: Window could not be created! SDL Error: %s", __func__, SDL_GetError());
@@ -115,7 +117,10 @@ int main() {
 
         ImGui::StyleColorsDark();
 
-        io.Fonts->AddFontDefault();
+        ImFontConfig config;
+        config.SizePixels = 24.0f;
+
+        io.Fonts->AddFontDefault(&config);
         ImGui_ImplSDL2_InitForOpenGL(window, context);
         ImGui_ImplOpenGL3_Init("#version 330 core");
 
@@ -135,6 +140,12 @@ int main() {
                             exit = 1;
                         }
                         break;
+                    case SDL_WINDOWEVENT:
+                        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                            io.DisplaySize.x = (float) event.window.data1;
+                            io.DisplaySize.y = (float) event.window.data2;
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -145,7 +156,6 @@ int main() {
 
             ImGui::NewFrame();
 
-            // Main window covering the entire screen
             ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
             ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
             
