@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -6,7 +7,6 @@
 
 #include <SDL.h>
 #include <glad/glad.h>
-
 #ifdef __SWITCH__
 #include <switch.h>
 #endif
@@ -14,6 +14,9 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
+#ifndef __SWITCH__
+#include "whereami.h"
+#endif
 
 namespace fs = std::filesystem;
 
@@ -33,13 +36,13 @@ const std::vector<std::string> possible_models_paths = {
     "../../models",
     "../share/casioemu/models",
     "models",
-    "sdmc:/switch/casiolauncher/models",
 };
 
-std::vector<fs::directory_entry> getModelsDirectoryEntries() {
-	std::vector<fs::directory_entry> models;	
+std::vector<fs::directory_entry> getModelsDirectoryEntries(fs::path root_path) {
+	std::vector<fs::directory_entry> models;
 
-    for (const auto& models_path : possible_models_paths) {
+    for (const auto& models_subpath : possible_models_paths) {
+        fs::path models_path = root_path / models_subpath;
         if (!fs::exists(models_path) || !fs::is_directory(models_path)) {
             continue;
         }
@@ -93,10 +96,16 @@ static bool init() {
     return success;
 }
 int main() {
-#ifdef __SWITCH__
+#ifndef __SWITCH__
+    char executable_path[PATH_MAX];
+    wai_getExecutablePath(executable_path, sizeof(executable_path), NULL);
+    fs::path executable_dir = fs::path(executable_path).parent_path();
+#else
     freopen("casiolauncher.log", "w", stdout);
     setvbuf(stdout, NULL, _IOLBF, 1024);
+    fs::path executable_dir = fs::path("./");
 #endif
+    
     if ( init() ) {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -110,7 +119,7 @@ int main() {
         ImGui_ImplSDL2_InitForOpenGL(window, context);
         ImGui_ImplOpenGL3_Init("#version 330 core");
 
-        std::vector<fs::directory_entry> models = getModelsDirectoryEntries();
+        std::vector<fs::directory_entry> models = getModelsDirectoryEntries(fs::path(executable_dir));
 
         int exit = 0;
         while (!exit) {

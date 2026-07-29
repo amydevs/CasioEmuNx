@@ -9,9 +9,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 include(glad)
 include(imgui)
+if(NOT NINTENDO_SWITCH)
+    include(whereami)
+endif()
+
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
+
+
 
 # Define the executable
 add_executable(casiolauncher
@@ -25,6 +31,12 @@ target_link_libraries(casiolauncher
     ${SDL2_LIBRARIES}
     ${GLAD_LIBRARIES}
 )
+
+if(NOT NINTENDO_SWITCH)
+    target_link_libraries(casiolauncher
+        whereami
+    )
+endif()
 
 # Include directories
 target_include_directories(casiolauncher PRIVATE
